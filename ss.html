@@ -1,0 +1,308 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">  
+<html xmlns="http://www.w3.org/1999/xhtml">  
+    <head>  
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
+        <title>SS Packet tool</title>  
+    </head>  
+    <body>  
+        <div>  
+            Input SS Packet:  
+            <input type="text" id="ssPacketStr"></input>  
+            <input type="button" id="ssDecodeBtn" value="Decode" onClick="ssDecode()"></input>  
+        </div>  
+        <div>  
+            Result:<br />  
+            <textarea id="ssResult" cols="100" rows="40"></textarea>  
+
+        </div>  
+    </body>  
+    <script type="text/javascript">  
+        if (typeof smT=="undefined"){  
+            var smT = {  
+                BEGINFLG: 1,  
+                MESSAGETYPE: 2,  
+                OTHERINFO:   3,
+                INFROELEMENTS:4,
+                FACILITYLEN:31,
+                FACILITYCOMPONENTTYPE: 32,
+                FCS:        99,
+            }  
+        }  
+
+var sm=smT.BEGINFLG;  
+var srcStr="";  
+var dstStr="";  
+var dataLen=0;  
+
+
+function setResult(str){  
+    document.getElementById("ssResult").value = str;  
+}  
+function resultAdd(str) {  
+    dstStr=dstStr+str;  
+}  
+function directionHandle(data, type){  
+    if (data == 0x0B)
+    {  
+        sm++;  
+        resultAdd("SS "+type+"\t\t:MO (0x0B)\n");  
+    } 
+    else if(data == 0x8B)
+    {
+        sm++;
+        resultAdd("SS "+type+"\t\t:MT (0x8B)\n");  
+    }
+    else
+    {
+        alert("SS message start error! shoud be 0x0B/0x8B");  
+    }
+}  
+
+function messageTypeHandle(data){  
+    if (data == 0x2A)  
+    {  
+        sm++;  
+        resultAdd("Message type\t\t:RELEASE COMPLETE (0x2A)\n");  
+    } 
+    else if(data == 0x3A)
+    {
+        sm++;  
+        resultAdd("Message type\t\t:FACILITY (0x3A)\n");  
+    }
+    else if(data == 0x3B)
+    {8B 2A 1C 0B A3 09 
+        sm++;  
+        resultAdd("Message type\t\t:REGISTER (0x3B)\n");  
+    }
+    else
+    {
+        alert("SS message type error! shoud be 0x2A/0x3A/0x3B");  
+    }
+}  
+
+function otherIfoEleHandle(data){  
+    if (data == 0x08)  
+    {  
+        sm=5;  
+        resultAdd("Information elements\t:Cause (0x08)\n");  
+    } 
+    else if(data == 0x1C)
+    {
+        sm=31;
+        resultAdd("Information elements\t:Facility (0x1C)\n");  
+    }
+    else if(data == 0x7F)
+    {
+        sm=9;
+        resultAdd("Information elements\t:SS version indicator (0x7F)\n");  
+    }
+    else
+    {
+        alert("SS Information elements error! shoud be 0x08/0x1C/0x7F");  
+    }
+}  
+
+function facilityLenHandle(data){  
+    sm++;  
+    resultAdd("Faciltiy len\t\t:"+data+"\n");  
+}  
+
+function faclityComponentTypeHandle(data){  
+    if (data == 0xA1)  
+    {  
+        sm++;
+        resultAdd("\tComponent type\t:Invoke (0xA1)\n");  
+    } 
+    else if(data == 0xA2)
+    {
+        sm++;
+        resultAdd("\tComponent type\t:Return Result (0xA2)\n");  
+    }
+    else if(data == 0xA3)
+    {
+        sm++;
+        resultAdd("\tComponent type\t:Return Error (0xA3)\n");  
+    }
+    else if(data == 0xA4)
+    {
+        sm++;
+        resultAdd("\tComponent type\t:Reject (0xA4)\n");  
+    }
+    else
+    {
+        alert("SS faciltiy Component type! ");  
+    }
+}  
+
+
+function addrHandle(data){  
+    var bitStr = parseInt(data).toString(2);  
+    while (bitStr.length < 8)  
+    {  
+        bitStr = "0"+bitStr;  
+    }  
+    //alert(bitStr);  
+
+    var DLCI = bitStr.substr(0, 6);  
+    var chanID = parseInt(DLCI, 2);  
+    resultAdd("Channel:\t"+chanID+"\n");  
+
+    resultAdd("Direction:\t");  
+    var CR = bitStr.substr(6, 1);  
+    if (CR == "1")  {  
+        resultAdd("C->S\n");  
+    }  
+    else {  
+        resultAdd("C<-S\n");  
+    }  
+
+    var EA = bitStr.substr(7, 1);  
+    if (EA == "1"){  
+        sm++;  
+    }  
+    else {  
+        alert("Address Fieled EA err");  
+    }  
+}  
+
+function ctrlHandle(data){  
+    var bitStr = parseInt(data).toString(2);  
+    while (bitStr.length < 8)  
+    {  
+        bitStr = "0"+bitStr;  
+    }  
+
+    sm++;  
+
+    var PF = bitStr.substr(3, 1);  
+    resultAdd("PF:\t\t"+PF+"\n");  
+    resultAdd("Frame Type:\t");  
+
+    bitStr = bitStr.substring(0, 3)+'0'+bitStr.substring(4, 8);  
+    if (bitStr == "00101111") {  
+        resultAdd("SABM");  
+    }  
+    else if (bitStr == "01100011") {  
+        resultAdd("UA");  
+    }  
+    else if (bitStr == "00001111") {  
+        resultAdd("DM");  
+    }  
+    else if (bitStr == "01000011") {  
+        resultAdd("DISC");  
+    }  
+    else if (bitStr == "11101111") {  
+        resultAdd("UIH");  
+    }  
+    else if (bitStr == "00000011") {  
+        resultAdd("UI");  
+    }  
+    else {  
+        alert("unknown type:"+bitStr);  
+    }  
+
+    resultAdd("\n");  
+}  
+
+function lenHandle(len, type){  
+    if (type == "hi") {  
+        sm++;  
+        dataLen += len*128;  
+        resultAdd("Data Length:\t"+dataLen+"\n");  
+    }  
+    else{  
+        //alert(len/2|0);  
+        dataLen+=len/2|0;  
+
+        if (len % 2 == 0){  
+            sm++;  
+        }  
+        else {  
+            sm+=2;  
+            resultAdd("Data Length:\t"+dataLen+"\n");  
+        }  
+    }  
+}  
+
+function infoHandle(str, len)  
+{  
+    var sLen = 0;  
+
+    while ((sLen < str.length) && (len > 0))  
+    {  
+        if (str.substr(sLen, 1) == " ")  
+        {  
+        }  
+        else  
+        {  
+            len -= 1/2;  
+        }  
+        sLen++;  
+    }  
+
+    resultAdd("Infomation:\t");  
+    resultAdd(str.substr(0, sLen));  
+    resultAdd("\n");  
+    return sLen;  
+}  
+
+function ssDecode(){  
+    var i = 0;  
+    var data;  
+    dataLen = 0;  
+
+    srcStr=document.getElementById("ssPacketStr").value;  
+    dstStr="";  
+    setResult("");  
+    sm=smT.BEGINFLG;  
+
+    while(i < srcStr.length)  
+    {  
+        /* skip spaces */  
+        while (srcStr.substr(i, 1) == " ")  
+        {  
+            i++;  
+        }  
+
+        /* get char */  
+        var curStr = srcStr.substr(i, 2);  
+        data = parseInt(curStr, 16);  
+
+        /* handle char */  
+        switch (sm) {  
+            case smT.BEGINFLG:  
+                directionHandle(data, "BEGIN");  
+                break;  
+            case smT.MESSAGETYPE:  
+                messageTypeHandle(data);  
+                break;  
+            case smT.OTHERINFO:
+                otherIfoEleHandle(data);
+                break;
+            <!-- case smT.INFROELEMENTS: -->
+                <!-- otherIfoEleHandle(data); -->
+                <!-- break; -->
+            case smT.FACILITYLEN:
+                facilityLenHandle(data);
+                break;
+            case smT.FACILITYCOMPONENTTYPE:
+                faclityComponentTypeHandle(data);
+                break;
+
+        }  
+        if (sm == smT.FCS)  
+        {  
+            i+=infoLen;  
+        }  
+        else  
+        {  
+            i+=2;  
+        }  
+    }  
+
+    setResult(dstStr);  
+}  
+</script>  
+
+</html>  
+
