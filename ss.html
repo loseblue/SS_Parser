@@ -25,6 +25,21 @@
                 INFROELEMENTS:4,
                 FACILITYLEN:31,
                 FACILITYCOMPONENTTYPE: 32,
+                FAC_COMPO_LEN:33,
+                FAC_COMPO_INVOKE_ID_TAG:34,
+                FAC_COMPO_INVOKE_ID_LEN:35,
+                FAC_COMPO_INVOKE_ID:36,
+                FAC_COMPO_LSE_ID:37,
+                FAC_COMPO_LINKED_ID_TAG:38,
+                FAC_COMPO_LINKED_ID:39,
+                FAC_COMPO_OPER_ID_TAG:40,
+                FAC_COMPO_OPER_ID_LEN:41,
+                FAC_COMPO_OPER_ID:42,
+                FAC_COMPO_SEQ_LEN:45,
+                FAC_COMPO_ERROR_LEN:51,
+                FAC_COMPO_ERROR_CODE:52,
+                FAC_COMPO_PROBLEM_LEN:55,
+                FAC_COMPO_PROBLEM_CODE:56,
                 FCS:        99,
             }  
         }  
@@ -33,6 +48,8 @@ var sm=smT.BEGINFLG;
 var srcStr="";  
 var dstStr="";  
 var dataLen=0;  
+var ComponentTypeFlag=0;
+var ProblemTypeFlag=0;
 
 
 function setResult(str){  
@@ -70,7 +87,7 @@ function messageTypeHandle(data){
         resultAdd("Message type\t\t:FACILITY (0x3A)\n");  
     }
     else if(data == 0x3B)
-    {8B 2A 1C 0B A3 09 
+    {
         sm++;  
         resultAdd("Message type\t\t:REGISTER (0x3B)\n");  
     }
@@ -111,21 +128,25 @@ function faclityComponentTypeHandle(data){
     if (data == 0xA1)  
     {  
         sm++;
+        ComponentType= 0xA1;
         resultAdd("\tComponent type\t:Invoke (0xA1)\n");  
     } 
     else if(data == 0xA2)
     {
         sm++;
+        ComponentType= 0xA2;
         resultAdd("\tComponent type\t:Return Result (0xA2)\n");  
     }
     else if(data == 0xA3)
     {
         sm++;
+        ComponentType= 0xA3;
         resultAdd("\tComponent type\t:Return Error (0xA3)\n");  
     }
     else if(data == 0xA4)
     {
         sm++;
+        ComponentType= 0xA4;
         resultAdd("\tComponent type\t:Reject (0xA4)\n");  
     }
     else
@@ -134,117 +155,291 @@ function faclityComponentTypeHandle(data){
     }
 }  
 
-
-function addrHandle(data){  
-    var bitStr = parseInt(data).toString(2);  
-    while (bitStr.length < 8)  
-    {  
-        bitStr = "0"+bitStr;  
-    }  
-    //alert(bitStr);  
-
-    var DLCI = bitStr.substr(0, 6);  
-    var chanID = parseInt(DLCI, 2);  
-    resultAdd("Channel:\t"+chanID+"\n");  
-
-    resultAdd("Direction:\t");  
-    var CR = bitStr.substr(6, 1);  
-    if (CR == "1")  {  
-        resultAdd("C->S\n");  
-    }  
-    else {  
-        resultAdd("C<-S\n");  
-    }  
-
-    var EA = bitStr.substr(7, 1);  
-    if (EA == "1"){  
-        sm++;  
-    }  
-    else {  
-        alert("Address Fieled EA err");  
-    }  
-}  
-
-function ctrlHandle(data){  
-    var bitStr = parseInt(data).toString(2);  
-    while (bitStr.length < 8)  
-    {  
-        bitStr = "0"+bitStr;  
-    }  
-
+function faclityComponentLenHandle(data){  
     sm++;  
-
-    var PF = bitStr.substr(3, 1);  
-    resultAdd("PF:\t\t"+PF+"\n");  
-    resultAdd("Frame Type:\t");  
-
-    bitStr = bitStr.substring(0, 3)+'0'+bitStr.substring(4, 8);  
-    if (bitStr == "00101111") {  
-        resultAdd("SABM");  
-    }  
-    else if (bitStr == "01100011") {  
-        resultAdd("UA");  
-    }  
-    else if (bitStr == "00001111") {  
-        resultAdd("DM");  
-    }  
-    else if (bitStr == "01000011") {  
-        resultAdd("DISC");  
-    }  
-    else if (bitStr == "11101111") {  
-        resultAdd("UIH");  
-    }  
-    else if (bitStr == "00000011") {  
-        resultAdd("UI");  
-    }  
-    else {  
-        alert("unknown type:"+bitStr);  
-    }  
-
-    resultAdd("\n");  
+    resultAdd("\tComponent len\t:"+data+"\n");  
 }  
 
-function lenHandle(len, type){  
-    if (type == "hi") {  
-        sm++;  
-        dataLen += len*128;  
-        resultAdd("Data Length:\t"+dataLen+"\n");  
-    }  
-    else{  
-        //alert(len/2|0);  
-        dataLen+=len/2|0;  
-
-        if (len % 2 == 0){  
-            sm++;  
-        }  
-        else {  
-            sm+=2;  
-            resultAdd("Data Length:\t"+dataLen+"\n");  
-        }  
-    }  
-}  
-
-function infoHandle(str, len)  
-{  
-    var sLen = 0;  
-
-    while ((sLen < str.length) && (len > 0))  
+function faclityComponentInvokeIDTagHandle(data){  
+    if (data == 0x02)  
     {  
-        if (str.substr(sLen, 1) == " ")  
-        {  
-        }  
-        else  
-        {  
-            len -= 1/2;  
-        }  
-        sLen++;  
-    }  
-
-    resultAdd("Infomation:\t");  
-    resultAdd(str.substr(0, sLen));  
-    resultAdd("\n");  
-    return sLen;  
+        sm++;  
+        resultAdd("\tInvoke ID tag\t: (0x02)\n");  
+    } 
+    else
+    {
+        alert("SS message Invoke ID tag! shoud be 0x02"); 
+    }
 }  
+
+function faclityComponentInvokeIDLenHandle(data){  
+    sm++;  
+    resultAdd("\tInvoke ID len\t:"+data+"\n");  
+} 
+
+function faclityComponentInvokeIDHandle(data){  
+    sm++;  
+    resultAdd("\tInvoke ID \t:"+data+"\n");  
+}  
+
+function facilityComponentRejectTagHandle(data){ 
+    if (data == 0x80)  
+    {  
+        sm++;  
+        resultAdd("\tLinked ID tag:(0x30)\n");  
+    } 
+    else if(data == 0x30)
+    {
+        sm++;  
+        resultAdd("\tSequence tag:FACILITY (0x30)\n");  
+    }
+    else if(data == 0x02)
+    {
+        sm++;  
+        resultAdd("\tError Code tag: (0x02)\n");  
+    }
+    else
+    {
+        alert("SS error!");  
+    }
+}  
+
+function faclityComponentLSETagHandle(data){  
+    if(ComponentType == 0xA1) //Invoke
+    {
+        if(data == 0x80) //link id tag
+        {
+            sm=38;
+            resultAdd("\tLinked ID tag: (0x80)\n");  
+        }
+        else if(data == 0x02)
+        {
+            sm=41;
+            resultAdd("\tOperation ID tag: (0x02)\n");  
+        }
+        else
+        {
+            alert("SS message Invoke component error!");  
+        }
+    }
+    else if(ComponentType == 0xA2) //Return Result
+    {
+        if(data == 0x30) //sequence tag
+        {
+            sm=38;
+            resultAdd("\tSequence ID tag\t: (0x30)\n");  
+        }
+        else if(data == 0x02) //Operation tag
+        {
+            sm=41;
+            resultAdd("\tOperation ID tag\t: (0x02)\n");  
+        }
+        else
+        {
+            alert("SS message Return result component error!");  
+        }
+    }
+    else if(ComponentType == 0xA3) //Return Error
+    {
+        if(data == 0x02) //Error Code tag
+        {
+            sm = 51;
+            resultAdd("\tError Code tag\t: (0x02)\n");  
+        }
+        else
+        {
+            alert("SS message Return Error component error!");  
+        }
+    }
+    else if(ComponentType == 0xA4) //Reject
+    {
+        sm = 55;
+        ProblemTypeFlag = data;
+        if(data == 0x80) 
+        {
+            resultAdd("\tProblem Code tag\t: General Problem tag (0x02)\n");  
+        }
+        else if(data == 0x81) 
+        {
+            resultAdd("\tProblem Code tag\t: Invoke Problem tag (0x02)\n");  
+        }
+        else if(data == 0x82) 
+        {
+            resultAdd("\tProblem Code tag\t: Return Result Problem tag (0x02)\n");  
+        }
+        else if(data == 0x83) 
+        {
+            resultAdd("\tProblem Code tag\t: Return Error Problem tag (0x02)\n");  
+        }
+    }
+}  
+function faclityComponentLinkedIDLenHandle(data){  
+    sm++;  
+    resultAdd("\tLinked ID len:"+data+"\n");  
+} 
+function faclityComponentLinkedIDHandle(data){  
+    sm++;  
+    resultAdd("\tLinked ID \t:"+data+"\n");  
+}  
+
+function faclityComponentOperationIDTagHandle(data){  
+    sm++;  
+    resultAdd("\tOperation ID Tag\t:"+data+"\n");  
+}  
+function faclityComponentOperationIDLenHandle(data){  
+    sm++;  
+    resultAdd("\tOperation ID len:"+data+"\n");  
+} 
+function faclityComponentOperationIDHandle(data){  
+    sm++;  
+    resultAdd("\tOperation ID \t:"+data+"\n");  
+}  
+
+function faclityComponentSequenceLenHandle(data){  
+    sm = 40;  
+    resultAdd("\tSequence len:"+data+"\n");  
+} 
+
+function faclityComponentErrorLenHandle(data){  
+    sm++;  
+    resultAdd("\tError Code len:"+data+"\n");  
+} 
+function faclityComponentErrorCodeHandle(data){  
+    sm++;
+    if(data == 1)
+        resultAdd("\tError Code \t:UnknownSubscriber ("+data+")\n");  
+    else if(data == 9)
+        resultAdd("\tError Code \t:IllegalSubscriber ("+data+")\n");  
+    else if(data == 10)
+        resultAdd("\tError Code \t:BearerServiceNotProvisioned ("+data+")\n");  
+    else if(data == 11)
+        resultAdd("\tError Code \t:TeleserviceNotProvisioned ("+data+")\n");  
+    else if(data == 12)
+        resultAdd("\tError Code \t:IllegalEquipment ("+data+")\n");  
+    else if(data == 13)
+        resultAdd("\tError Code \t:CallBarred ("+data+")\n");  
+    else if(data == 16)
+        resultAdd("\tError Code \t:IllegalSS-Operation ("+data+")\n");  
+    else if(data == 17)
+        resultAdd("\tError Code \t:SS-ErrorStatus ("+data+")\n");  
+    else if(data == 18)
+        resultAdd("\tError Code \t:SS-NotAvailable ("+data+")\n");  
+    else if(data == 19)
+        resultAdd("\tError Code \t:SS-SubscriptionViolation ("+data+")\n");  
+    else if(data == 20)
+        resultAdd("\tError Code \t:SS-Incompatibility ("+data+")\n");  
+    else if(data == 21)
+        resultAdd("\tError Code \t:FacilityNotSupported ("+data+")\n");  
+    else if(data == 27)
+        resultAdd("\tError Code \t:AbsentSubscriber ("+data+")\n");  
+    else if(data == 29)
+        resultAdd("\tError Code \t:ShortTermDenial ("+data+")\n");  
+    else if(data == 30)
+        resultAdd("\tError Code \t:LongTermDenial ("+data+")\n");  
+    else if(data == 34)
+        resultAdd("\tError Code \t:SystemFailure ("+data+")\n");  
+    else if(data == 35)
+        resultAdd("\tError Code \t:DataMissing ("+data+")\n");  
+    else if(data == 36)
+        resultAdd("\tError Code \t:UnexpectedDataValue ("+data+")\n");  
+    else if(data == 37)
+        resultAdd("\tError Code \t:PW-RegistrationFailure ("+data+")\n");  
+    else if(data == 38)
+        resultAdd("\tError Code \t:NegativePW-Check ("+data+")\n");  
+    else if(data == 43)
+        resultAdd("\tError Code \t:NumberOfPW-AttemptsViolation ("+data+")\n");  
+    else if(data == 54)
+        resultAdd("\tError Code \t:PositionMethodFailure ("+data+")\n");  
+    else if(data == 71)
+        resultAdd("\tError Code \t:UnknownAlphabet ("+data+")\n");  
+    else if(data == 72)
+        resultAdd("\tError Code \t:USSD-Busy ("+data+")\n");  
+    else if(data == 120)
+        resultAdd("\tError Code \t:Nbr-SbExceeded ("+data+")\n");  
+    else if(data == 121)
+        resultAdd("\tError Code \t:RejectedByUser ("+data+")\n");  
+    else if(data == 122)
+        resultAdd("\tError Code \t:RejectedByNetwork ("+data+")\n");  
+    else if(data == 123)
+        resultAdd("\tError Code \t:DeflectionToServedSubscriber ("+data+")\n");  
+    else if(data == 124)
+        resultAdd("\tError Code \t:SpecialServiceCode ("+data+")\n");  
+    else if(data == 125)
+        resultAdd("\tError Code \t:InvalidDeflectedToNumber ("+data+")\n");  
+    else if(data == 126)
+        resultAdd("\tError Code \t:MaxNumberOfMPTY-ParticipantsExceeded ("+data+")\n");  
+    else if(data == 127)
+        resultAdd("\tError Code \t:ResourcesNotAvailable ("+data+")\n");  
+}  
+
+function faclityComponentProblemCodeLenHandle(data){  
+    sm++;  
+    resultAdd("\tProblem Code len:"+data+"\n");  
+} 
+
+function faclityComponentProblemCodeHandle(data){  
+    if(ProblemTypeFlag == 0x80) 
+    {
+        if(data == 0x00)
+            resultAdd("\tGeneral Problem Code\t: Unrecognized Component (0x00)\n");  
+        else if(data == 0x01)
+            resultAdd("\tGeneral Problem Code\t:Mistyped Component  (0x01)\n");  
+        else if(data == 0x02)
+            resultAdd("\tGeneral Problem Code\t:Badly Structured Component  (0x02)\n");  
+        else
+            alert("General Problem Code ERROR");
+    }
+    else if(ProblemTypeFlag == 0x81) 
+    {
+        if(data == 0x00)
+            resultAdd("\tInvoke Problem Code\t: Duplicate Invoke ID  (0x00)\n");  
+        else if(data == 0x01)
+            resultAdd("\tInvoke Problem Code\t:Unrecognized Operation (0x01)\n");  
+        else if(data == 0x02)
+            resultAdd("\tInvoke Problem Code\t:Mistyped Parameter (0x02)\n");  
+        else if(data == 0x03)
+            resultAdd("\tInvoke Problem Code\t:Resource Limitation  (0x03)\n");  
+        else if(data == 0x04)
+            resultAdd("\tInvoke Problem Code\t:Initiating Release (0x04)\n");  
+        else if(data == 0x05)
+            resultAdd("\tInvoke Problem Code\t:Unrecognized Linked ID (0x05)\n");  
+        else if(data == 0x06)
+            resultAdd("\tInvoke Problem Code\t:Linked Response Unexpected(0x06)\n");  
+        else if(data == 0x07)
+            resultAdd("\tInvoke Problem Code\t:Unexpected Linked Operation(0x07)\n");  
+        else
+            alert("Invoke Problem Code ERROR");
+    }
+    else if(ProblemTypeFlag == 0x82) 
+    {
+        if(data == 0x00)
+            resultAdd("\tReturn Result Problem Codes\t: Unrecognized Invoke ID (0x00)\n");  
+        else if(data == 0x01)
+            resultAdd("\tReturn Result Problem Codes\t:Return Result Unexpected (0x01)\n");  
+        else if(data == 0x02)
+            resultAdd("\tReturn Result Problem Codes\t:Mistyped Parameter (0x02)\n");  
+        else
+            alert("General Problem Code ERROR");
+    }
+    else if(ProblemTypeFlag == 0x83) 
+    {
+        if(data == 0x00)
+            resultAdd("\tReturn Error Problem Code\t:Unrecognized Invoke ID (0x00)\n");  
+        else if(data == 0x01)
+            resultAdd("\tReturn Error Problem Code\t:Return Error Unexpected (0x01)\n");  
+        else if(data == 0x02)
+            resultAdd("\tReturn Error Problem Code\t:Unrecognized Error (0x02)\n");  
+        else if(data == 0x03)
+            resultAdd("\tReturn Error Problem Code\t:Unexpected Error(0x03)\n");  
+        else if(data == 0x04)
+            resultAdd("\tReturn Error Problem Code\t:Mistyped Parameter (0x04)\n");  
+        else
+            alert("Return Error Problem Code ERROR");
+    }
+}  
+
+
+
 
 function ssDecode(){  
     var i = 0;  
@@ -288,6 +483,52 @@ function ssDecode(){
             case smT.FACILITYCOMPONENTTYPE:
                 faclityComponentTypeHandle(data);
                 break;
+            case smT.FAC_COMPO_LEN:
+                faclityComponentLenHandle(data);
+                break;
+            case smT.FAC_COMPO_INVOKE_ID_TAG:
+                faclityComponentInvokeIDTagHandle(data);
+                break;
+            case smT.FAC_COMPO_INVOKE_ID_LEN:
+                faclityComponentInvokeIDLenHandle(data);
+                break;
+            case smT.FAC_COMPO_INVOKE_ID:
+                faclityComponentInvokeIDHandle(data);
+                break;
+            case smT.FAC_COMPO_LSE_ID:
+                faclityComponentLSETagHandle(data);//linked ID tag,Sequence tag,Error code
+                break;
+            case smT.FAC_COMPO_LINKED_ID_TAG:
+                faclityComponentLinkedIDLenHandle(data);
+                break;
+            case smT.FAC_COMPO_LINKED_ID:
+                faclityComponentLinkedIDHandle(data);
+                break;
+            case smT.FAC_COMPO_OPER_ID_TAG:
+                faclityComponentOperationIDTagHandle(data);
+                break;
+            case smT.FAC_COMPO_OPER_ID_LEN:
+                faclityComponentOperationIDLenHandle(data);
+                break;
+            case smT.FAC_COMPO_OPER_ID:
+                faclityComponentOperationIDHandle(data);
+                break;
+            case smT.FAC_COMPO_SEQ_LEN:
+                faclityComponentSequenceLenHandle(data);
+                break;
+            case smT.FAC_COMPO_ERROR_LEN:
+                faclityComponentErrorLenHandle(data);
+                break;
+            case smT.FAC_COMPO_ERROR_CODE:
+                faclityComponentErrorCodeHandle(data);
+                break;
+            case smT.FAC_COMPO_PROBLEM_LEN:
+                faclityComponentProblemCodeLenHandle(data);
+                break;
+            case smT.FAC_COMPO_PROBLEM_CODE:
+                faclityComponentProblemCodeHandle(data);
+                break;
+
 
         }  
         if (sm == smT.FCS)  
