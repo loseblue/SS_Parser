@@ -292,7 +292,60 @@ function faclityComponentOperationIDLenHandle(data){
 } 
 function faclityComponentOperationIDHandle(data){  
     sm++;  
-    resultAdd("\tOperation ID \t:"+data+"\n");  
+    if(data == 10)
+        resultAdd("\tOperation ID Code\t: RegisterSS ("+data+")\n");  
+    else if(data == 11)
+        resultAdd("\tOperation ID Code\t: EraseSS ("+data+")\n");  
+    else if(data == 12)
+        resultAdd("\tOperation ID Code\t: ActivateSS ("+data+")\n");  
+    else if(data == 13)
+        resultAdd("\tOperation ID Code\t: DeactivateSS ("+data+")\n");  
+    else if(data == 14)
+        resultAdd("\tOperation ID Code\t: InterrogateSS ("+data+")\n");  
+    else if(data == 16)
+        resultAdd("\tOperation ID Code\t: NotifySS ("+data+")\n");  
+    else if(data == 17)
+        resultAdd("\tOperation ID Code\t: RegisterPassword ("+data+")\n");  
+    else if(data == 18)
+        resultAdd("\tOperation ID Code\t: GetPassword ("+data+")\n");  
+    else if(data == 19)
+        resultAdd("\tOperation ID Code\t: ProcessUnstructuredSS-Data ("+data+")\n");  
+    else if(data == 38)
+        resultAdd("\tOperation ID Code\t: ForwardCheckSS-Indication ("+data+")\n");  
+    else if(data == 59)
+        resultAdd("\tOperation ID Code\t: ProcessUnstructuredSS-Request ("+data+")\n");  
+    else if(data == 60)
+        resultAdd("\tOperation ID Code\t: UnstructuredSS-Request ("+data+")\n");  
+    else if(data == 61)
+        resultAdd("\tOperation ID Code\t: UnstructuredSS-Notify ("+data+")\n");  
+    else if(data == 77)
+        resultAdd("\tOperation ID Code\t: EraseCC-Entry ("+data+")\n");  
+    else if(data == 117)
+        resultAdd("\tOperation ID Code\t: CallDeflection ("+data+")\n");  
+    else if(data == 118)
+        resultAdd("\tOperation ID Code\t: UserUserService ("+data+")\n");  
+    else if(data == 119)
+        resultAdd("\tOperation ID Code\t: AccessRegisterCCEntry ("+data+")\n");  
+    else if(data == 120)
+        resultAdd("\tOperation ID Code\t: ForwardCUG-Info ("+data+")\n");  
+    else if(data == 121)
+        resultAdd("\tOperation ID Code\t: SplitMPTY ("+data+")\n");  
+    else if(data == 122)
+        resultAdd("\tOperation ID Code\t: RetrieveMPTY ("+data+")\n");  
+    else if(data == 123)
+        resultAdd("\tOperation ID Code\t: HoldMPTY ("+data+")\n");  
+    else if(data == 124)
+        resultAdd("\tOperation ID Code\t: BuildMPTY ("+data+")\n");  
+    else if(data == 125)
+        resultAdd("\tOperation ID Code\t: ForwardChargeAdvice ("+data+")\n");  
+    else if(data == 126)
+        resultAdd("\tOperation ID Code\t: ExplicitCT ("+data+")\n");  
+    else if(data == 116)
+        resultAdd("\tOperation ID Code\t: LCS-LocationNotification ("+data+")\n");  
+    else if(data == 115)
+        resultAdd("\tOperation ID Codet: LCS-MOLR ("+data+")\n");  
+    else
+        alert("Operation ID Code Error!");
 }  
 
 function faclityComponentSequenceLenHandle(data){  
