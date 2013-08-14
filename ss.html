@@ -1,48 +1,44 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">  
 <html xmlns="http://www.w3.org/1999/xhtml">  
-    <head>  
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
-        <title>SS Packet tool</title>  
-    </head>  
-    <body>  
-        <div>  
-            Input SS Packet:  
-            <input type="text" id="ssPacketStr"></input>  
-            <input type="button" id="ssDecodeBtn" value="Decode" onClick="ssDecode()"></input>  
-        </div>  
-        <div>  
-            Result:<br />  
-            <textarea id="ssResult" cols="100" rows="40"></textarea>  
+<head>  
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
+<title>SS Packet tool</title>  
+</head>  
+<body>  
+<div>  
+    Input SS Packet:  
+    <input type="text" id="ssPacketStr"></input>  
+    <input type="button" id="ssDecodeBtn" value="Decode" onClick="ssDecode()"></input>  
+</div>  
+<div>  
+    Result:<br />  
+    <textarea id="ssResult" cols="100" rows="40"></textarea>  
 
-        </div>  
-    </body>  
-    <script type="text/javascript">  
-        if (typeof smT=="undefined"){  
-            var smT = {  
-                BEGINFLG: 1,  
-                MESSAGETYPE: 2,  
-                OTHERINFO:   3,
-                INFROELEMENTS:4,
-                FACILITYLEN:31,
-                FACILITYCOMPONENTTYPE: 32,
-                FAC_COMPO_LEN:33,
-                FAC_COMPO_INVOKE_ID_TAG:34,
-                FAC_COMPO_INVOKE_ID_LEN:35,
-                FAC_COMPO_INVOKE_ID:36,
-                FAC_COMPO_LSE_ID:37,
-                FAC_COMPO_LINKED_ID_TAG:38,
-                FAC_COMPO_LINKED_ID:39,
-                FAC_COMPO_OPER_ID_TAG:40,
-                FAC_COMPO_OPER_ID_LEN:41,
-                FAC_COMPO_OPER_ID:42,
-                FAC_COMPO_SEQ_LEN:45,
-                FAC_COMPO_ERROR_LEN:51,
-                FAC_COMPO_ERROR_CODE:52,
-                FAC_COMPO_PROBLEM_LEN:55,
-                FAC_COMPO_PROBLEM_CODE:56,
-                FCS:        99,
-            }  
-        }  
+</div>  
+</body>  
+<script type="text/javascript">  
+if (typeof smT=="undefined"){  
+    var smT = {  
+FACILITY:5,
+         FAC_COMPO_LEN:33,
+         FAC_COMPO_INVOKE_ID_TAG:34,
+         FAC_COMPO_INVOKE_ID_LEN:35,
+         FAC_COMPO_INVOKE_ID:36,
+         FAC_COMPO_LSE_ID:37,
+         FAC_COMPO_LINKED_ID_TAG:38,
+         FAC_COMPO_LINKED_ID:39,
+         FAC_COMPO_OPER_ID_TAG:40,
+         FAC_COMPO_OPER_ID_LEN:41,
+         FAC_COMPO_OPER_ID:42,
+         FAC_COMPO_SEQ_LEN:45,
+         FAC_COMPO_ERROR_LEN:51,
+         FAC_COMPO_ERROR_CODE:52,
+         FAC_COMPO_PROBLEM_LEN:55,
+         FAC_COMPO_PROBLEM_CODE:56,
+         PARAMETER:60,
+         FCS:        99,
+    }  
+}  
 
 var sm=smT.BEGINFLG;  
 var srcStr="";  
@@ -58,46 +54,32 @@ function setResult(str){
 function resultAdd(str) {  
     dstStr=dstStr+str;  
 }  
-function directionHandle(data, type){  
+function directionHandle(data){  
     if (data == 0x0B)
-    {  
-        sm++;  
-        resultAdd("SS "+type+"\t\t:MO (0x0B)\n");  
-    } 
+        resultAdd("SS\t\t\t:MO (0x0B)\n");  
     else if(data == 0x8B)
-    {
-        sm++;
-        resultAdd("SS "+type+"\t\t:MT (0x8B)\n");  
-    }
+        resultAdd("SS\t\t\t:MT (0x8B)\n");  
     else
-    {
         alert("SS message start error! shoud be 0x0B/0x8B");  
-    }
 }  
 
 function messageTypeHandle(data){  
     if (data == 0x2A)  
-    {  
-        sm++;  
         resultAdd("Message type\t\t:RELEASE COMPLETE (0x2A)\n");  
-    } 
     else if(data == 0x3A)
-    {
-        sm++;  
         resultAdd("Message type\t\t:FACILITY (0x3A)\n");  
-    }
     else if(data == 0x3B)
-    {
-        sm++;  
         resultAdd("Message type\t\t:REGISTER (0x3B)\n");  
-    }
     else
-    {
         alert("SS message type error! shoud be 0x2A/0x3A/0x3B");  
-    }
 }  
 
-function otherIfoEleHandle(data){  
+function causeHandle(data){  
+    resultAdd("Cause\t:Cause (0x08)\n");  
+} 
+
+
+function otherInfoEleHandle(data){  
     if (data == 0x08)  
     {  
         sm=5;  
@@ -119,33 +101,32 @@ function otherIfoEleHandle(data){
     }
 }  
 
+function facilityHandle(data){  
+    resultAdd("Information elements\t:Facility (0x1C)\n"); 
+}  
+
 function facilityLenHandle(data){  
-    sm++;  
     resultAdd("Faciltiy len\t\t:"+data+"\n");  
 }  
 
 function faclityComponentTypeHandle(data){  
     if (data == 0xA1)  
     {  
-        sm++;
         ComponentType= 0xA1;
         resultAdd("\tComponent type\t:Invoke (0xA1)\n");  
     } 
     else if(data == 0xA2)
     {
-        sm++;
         ComponentType= 0xA2;
         resultAdd("\tComponent type\t:Return Result (0xA2)\n");  
     }
     else if(data == 0xA3)
     {
-        sm++;
         ComponentType= 0xA3;
         resultAdd("\tComponent type\t:Return Error (0xA3)\n");  
     }
     else if(data == 0xA4)
     {
-        sm++;
         ComponentType= 0xA4;
         resultAdd("\tComponent type\t:Reject (0xA4)\n");  
     }
@@ -156,31 +137,38 @@ function faclityComponentTypeHandle(data){
 }  
 
 function faclityComponentLenHandle(data){  
-    sm++;  
     resultAdd("\tComponent len\t:"+data+"\n");  
 }  
 
-function faclityComponentInvokeIDTagHandle(data){  
+function faclityInvokeIDTagHandle(data){  
     if (data == 0x02)  
-    {  
-        sm++;  
-        resultAdd("\tInvoke ID tag\t: (0x02)\n");  
-    } 
+        resultAdd("\tInvoke ID tag\t:(0x02)\n");  
     else
-    {
         alert("SS message Invoke ID tag! shoud be 0x02"); 
-    }
 }  
 
-function faclityComponentInvokeIDLenHandle(data){  
-    sm++;  
+function faclityInvokeIDLenHandle(data){  
     resultAdd("\tInvoke ID len\t:"+data+"\n");  
 } 
 
-function faclityComponentInvokeIDHandle(data){  
-    sm++;  
+function faclityInvokeIDHandle(data){  
     resultAdd("\tInvoke ID \t:"+data+"\n");  
 }  
+
+function faclityLinkedIDTagHandle(data){  
+    if (data == 0x80)  
+        resultAdd("\tLinked ID tag\t: (0x02)\n");  
+    else
+        alert("SS message Invoke ID tag! shoud be 0x02"); 
+}  
+
+function faclityLinkedIDLenHandle(data){  
+    resultAdd("\tLinked ID len\t:"+data+"\n");  
+} 
+
+function faclityLinkedIDHandle(data){  
+    resultAdd("\tLinked ID \t:"+data+"\n");  
+}
 
 function facilityComponentRejectTagHandle(data){ 
     if (data == 0x80)  
@@ -274,91 +262,89 @@ function faclityComponentLSETagHandle(data){
     }
 }  
 function faclityComponentLinkedIDLenHandle(data){  
-    sm++;  
     resultAdd("\tLinked ID len:"+data+"\n");  
 } 
 function faclityComponentLinkedIDHandle(data){  
-    sm++;  
     resultAdd("\tLinked ID \t:"+data+"\n");  
 }  
 
-function faclityComponentOperationIDTagHandle(data){  
-    sm++;  
-    resultAdd("\tOperation ID Tag\t:"+data+"\n");  
+function faclityOperationCodeTagHandle(data){  
+    resultAdd("\tOper Code Tag\t:"+data+"\n");  
 }  
-function faclityComponentOperationIDLenHandle(data){  
-    sm++;  
-    resultAdd("\tOperation ID len:"+data+"\n");  
+function faclityOperationCodeLenHandle(data){  
+    resultAdd("\tOper Code len\t:"+data+"\n");  
 } 
-function faclityComponentOperationIDHandle(data){  
-    sm++;  
+function faclityOperationCodeHandle(data){  
     if(data == 10)
-        resultAdd("\tOperation ID Code\t: RegisterSS ("+data+")\n");  
+        resultAdd("\tOper Code\t:RegisterSS ("+data+")\n");  
     else if(data == 11)
-        resultAdd("\tOperation ID Code\t: EraseSS ("+data+")\n");  
+        resultAdd("\tOper Code\t:EraseSS ("+data+")\n");  
     else if(data == 12)
-        resultAdd("\tOperation ID Code\t: ActivateSS ("+data+")\n");  
+        resultAdd("\tOper Code\t:ActivateSS ("+data+")\n");  
     else if(data == 13)
-        resultAdd("\tOperation ID Code\t: DeactivateSS ("+data+")\n");  
+        resultAdd("\tOper Code\t:DeactivateSS ("+data+")\n");  
     else if(data == 14)
-        resultAdd("\tOperation ID Code\t: InterrogateSS ("+data+")\n");  
+        resultAdd("\tOper Code\t:InterrogateSS ("+data+")\n");  
     else if(data == 16)
-        resultAdd("\tOperation ID Code\t: NotifySS ("+data+")\n");  
+        resultAdd("\tOper Code\t:NotifySS ("+data+")\n");  
     else if(data == 17)
-        resultAdd("\tOperation ID Code\t: RegisterPassword ("+data+")\n");  
+        resultAdd("\tOper Code\t:RegisterPassword ("+data+")\n");  
     else if(data == 18)
-        resultAdd("\tOperation ID Code\t: GetPassword ("+data+")\n");  
+        resultAdd("\tOper Code\t:GetPassword ("+data+")\n");  
     else if(data == 19)
-        resultAdd("\tOperation ID Code\t: ProcessUnstructuredSS-Data ("+data+")\n");  
+        resultAdd("\tOper Code\t:ProcessUnstructuredSS-Data ("+data+")\n");  
     else if(data == 38)
-        resultAdd("\tOperation ID Code\t: ForwardCheckSS-Indication ("+data+")\n");  
+        resultAdd("\tOper Code\t:ForwardCheckSS-Indication ("+data+")\n");  
     else if(data == 59)
-        resultAdd("\tOperation ID Code\t: ProcessUnstructuredSS-Request ("+data+")\n");  
+        resultAdd("\tOper Code\t:ProcessUnstructuredSS-Request ("+data+")\n");  
     else if(data == 60)
-        resultAdd("\tOperation ID Code\t: UnstructuredSS-Request ("+data+")\n");  
+        resultAdd("\tOper Code\t:UnstructuredSS-Request ("+data+")\n");  
     else if(data == 61)
-        resultAdd("\tOperation ID Code\t: UnstructuredSS-Notify ("+data+")\n");  
+        resultAdd("\tOper Code\t:UnstructuredSS-Notify ("+data+")\n");  
     else if(data == 77)
-        resultAdd("\tOperation ID Code\t: EraseCC-Entry ("+data+")\n");  
+        resultAdd("\tOper Code\t:EraseCC-Entry ("+data+")\n");  
     else if(data == 117)
-        resultAdd("\tOperation ID Code\t: CallDeflection ("+data+")\n");  
+        resultAdd("\tOper Code\t:CallDeflection ("+data+")\n");  
     else if(data == 118)
-        resultAdd("\tOperation ID Code\t: UserUserService ("+data+")\n");  
+        resultAdd("\tOper Code\t:UserUserService ("+data+")\n");  
     else if(data == 119)
-        resultAdd("\tOperation ID Code\t: AccessRegisterCCEntry ("+data+")\n");  
+        resultAdd("\tOper Code\t:AccessRegisterCCEntry ("+data+")\n");  
     else if(data == 120)
-        resultAdd("\tOperation ID Code\t: ForwardCUG-Info ("+data+")\n");  
+        resultAdd("\tOper Code\t:ForwardCUG-Info ("+data+")\n");  
     else if(data == 121)
-        resultAdd("\tOperation ID Code\t: SplitMPTY ("+data+")\n");  
+        resultAdd("\tOper Code\t:SplitMPTY ("+data+")\n");  
     else if(data == 122)
-        resultAdd("\tOperation ID Code\t: RetrieveMPTY ("+data+")\n");  
+        resultAdd("\tOper Code\t:RetrieveMPTY ("+data+")\n");  
     else if(data == 123)
-        resultAdd("\tOperation ID Code\t: HoldMPTY ("+data+")\n");  
+        resultAdd("\tOper Code\t:HoldMPTY ("+data+")\n");  
     else if(data == 124)
-        resultAdd("\tOperation ID Code\t: BuildMPTY ("+data+")\n");  
+        resultAdd("\tOper Code\t:BuildMPTY ("+data+")\n");  
     else if(data == 125)
-        resultAdd("\tOperation ID Code\t: ForwardChargeAdvice ("+data+")\n");  
+        resultAdd("\tOper Code\t:ForwardChargeAdvice ("+data+")\n");  
     else if(data == 126)
-        resultAdd("\tOperation ID Code\t: ExplicitCT ("+data+")\n");  
+        resultAdd("\tOper Code\t:ExplicitCT ("+data+")\n");  
     else if(data == 116)
-        resultAdd("\tOperation ID Code\t: LCS-LocationNotification ("+data+")\n");  
+        resultAdd("\tOper Code\t:LCS-LocationNotification ("+data+")\n");  
     else if(data == 115)
-        resultAdd("\tOperation ID Codet: LCS-MOLR ("+data+")\n");  
+        resultAdd("\tOper Codet\t:LCS-MOLR ("+data+")\n");  
     else
-        alert("Operation ID Code Error!");
+        alert("Operation Code Error!");
 }  
 
-function faclityComponentSequenceLenHandle(data){  
-    sm = 40;  
+function faclitySequenceTagHandle(data){  
+    resultAdd("\tSequence Tag\t:"+data+"\n");  
+}  
+function faclitySequenceLenHandle(data){  
     resultAdd("\tSequence len:"+data+"\n");  
 } 
 
-function faclityComponentErrorLenHandle(data){  
-    sm++;  
+function faclityErrorCodeTagHandle(data){  
+    resultAdd("\tSequence Tag\t:"+data+"\n");  
+}  
+function faclityErrorCodeLenHandle(data){  
     resultAdd("\tError Code len:"+data+"\n");  
 } 
-function faclityComponentErrorCodeHandle(data){  
-    sm++;
+function faclityErrorCodeHandle(data){  
     if(data == 1)
         resultAdd("\tError Code \t:UnknownSubscriber ("+data+")\n");  
     else if(data == 9)
@@ -425,12 +411,29 @@ function faclityComponentErrorCodeHandle(data){
         resultAdd("\tError Code \t:ResourcesNotAvailable ("+data+")\n");  
 }  
 
-function faclityComponentProblemCodeLenHandle(data){  
-    sm++;  
+function faclityProblemCodeTagHandle(data){  
+    resultAdd("\tProblem Code\t:"+data+"\n");
+    if(data == 0x80) 
+            {
+                resultAdd("\tProblem Code tag\t: General Problem tag (0x02)\n");  
+            }
+            else if(data == 0x81) 
+            {
+                resultAdd("\tProblem Code tag\t: Invoke Problem tag (0x02)\n");  
+            }
+            else if(data == 0x82) 
+            {
+                resultAdd("\tProblem Code tag\t: Return Result Problem tag (0x02)\n");  
+            }
+            else if(data == 0x83) 
+            {
+                resultAdd("\tProblem Code tag\t: Return Error Problem tag (0x02)\n");  
+            }
+}  
+function faclityProblemCodeLenHandle(data){  
     resultAdd("\tProblem Code len:"+data+"\n");  
 } 
-
-function faclityComponentProblemCodeHandle(data){  
+function faclityProblemCodeHandle(data){  
     if(ProblemTypeFlag == 0x80) 
     {
         if(data == 0x00)
@@ -491,13 +494,35 @@ function faclityComponentProblemCodeHandle(data){
     }
 }  
 
+function ssVersionIndIEIHandle(data){  
+    resultAdd("\tSS Version IEI \t:"+data+"\n");
+}  
+function ssVersionIndLenHandle(data){  
+    resultAdd("\tProblem Code len:"+data+"\n");  
+} 
+
+function ssVersionIndHandle(data){
+	resultAdd("\tSS Version  \t:"+data+"\n");
+}
 
 
+function faclityComponentParameterHandle(data){  
+    if(data == 0x30) 
+    {
+        resultAdd("\tParameters\t: (0x30)\n");  
+    }
+    else
+    {
+        alert("Do not found SS_PARAMS_TAG ");
+    }
+}  
 
 function ssDecode(){  
     var i = 0;  
+    var j = 0;
     var data;  
     dataLen = 0;  
+    var arrayObj = new Array();
 
     srcStr=document.getElementById("ssPacketStr").value;  
     dstStr="";  
@@ -512,90 +537,119 @@ function ssDecode(){
             i++;  
         }  
 
-        /* get char */  
         var curStr = srcStr.substr(i, 2);  
-        data = parseInt(curStr, 16);  
+        arrayObj[j] = parseInt(curStr, 16);
 
-        /* handle char */  
-        switch (sm) {  
-            case smT.BEGINFLG:  
-                directionHandle(data, "BEGIN");  
-                break;  
-            case smT.MESSAGETYPE:  
-                messageTypeHandle(data);  
-                break;  
-            case smT.OTHERINFO:
-                otherIfoEleHandle(data);
-                break;
-            <!-- case smT.INFROELEMENTS: -->
-                <!-- otherIfoEleHandle(data); -->
-                <!-- break; -->
-            case smT.FACILITYLEN:
-                facilityLenHandle(data);
-                break;
-            case smT.FACILITYCOMPONENTTYPE:
-                faclityComponentTypeHandle(data);
-                break;
-            case smT.FAC_COMPO_LEN:
-                faclityComponentLenHandle(data);
-                break;
-            case smT.FAC_COMPO_INVOKE_ID_TAG:
-                faclityComponentInvokeIDTagHandle(data);
-                break;
-            case smT.FAC_COMPO_INVOKE_ID_LEN:
-                faclityComponentInvokeIDLenHandle(data);
-                break;
-            case smT.FAC_COMPO_INVOKE_ID:
-                faclityComponentInvokeIDHandle(data);
-                break;
-            case smT.FAC_COMPO_LSE_ID:
-                faclityComponentLSETagHandle(data);//linked ID tag,Sequence tag,Error code
-                break;
-            case smT.FAC_COMPO_LINKED_ID_TAG:
-                faclityComponentLinkedIDLenHandle(data);
-                break;
-            case smT.FAC_COMPO_LINKED_ID:
-                faclityComponentLinkedIDHandle(data);
-                break;
-            case smT.FAC_COMPO_OPER_ID_TAG:
-                faclityComponentOperationIDTagHandle(data);
-                break;
-            case smT.FAC_COMPO_OPER_ID_LEN:
-                faclityComponentOperationIDLenHandle(data);
-                break;
-            case smT.FAC_COMPO_OPER_ID:
-                faclityComponentOperationIDHandle(data);
-                break;
-            case smT.FAC_COMPO_SEQ_LEN:
-                faclityComponentSequenceLenHandle(data);
-                break;
-            case smT.FAC_COMPO_ERROR_LEN:
-                faclityComponentErrorLenHandle(data);
-                break;
-            case smT.FAC_COMPO_ERROR_CODE:
-                faclityComponentErrorCodeHandle(data);
-                break;
-            case smT.FAC_COMPO_PROBLEM_LEN:
-                faclityComponentProblemCodeLenHandle(data);
-                break;
-            case smT.FAC_COMPO_PROBLEM_CODE:
-                faclityComponentProblemCodeHandle(data);
-                break;
-
-
-        }  
-        if (sm == smT.FCS)  
-        {  
-            i+=infoLen;  
-        }  
-        else  
-        {  
-            i+=2;  
-        }  
+        i+=2;  
+        j++;
     }  
+    
+    i = 0;
+    directionHandle(arrayObj[i]);
+    i++;
+    messageTypeHandle(arrayObj[i]);
+    data = arrayObj[i];
+    i++;
+    if(data == 0x2A)
+    {
+        if(arrayObj[i] == 0x08) //cause
+            causeHandle(arrayObj[i]);
+    }
+    if(arrayObj[i] = 0x1C) //facility
+    {
+        facilityHandle(arrayObj[i]);
+        i++;
+        facilityLenHandle(arrayObj[i]);
+        i++;
+        faclityComponentTypeHandle(arrayObj[i]);
+        i++;
+        faclityComponentLenHandle(arrayObj[i]);
+        i++;
+        faclityInvokeIDTagHandle(arrayObj[i]);
+        i++;
+        faclityInvokeIDLenHandle(arrayObj[i]);
+        i++;
+        faclityInvokeIDHandle(arrayObj[i]);
+        i++;
+        if(ComponentType == 0xA1) //Invoke
+        {
+            if(arrayObj[i] == 0x80) //link id tag
+            {
+                faclityLinkedIDTagHandle(arrayObj[i]);
+                i++;
+                faclityLinkedIDLenHandle(arrayObj[i]);
+                i++;
+                faclityLinkedIDHandle(arrayObj[i]);
+                i++;
+            }
+            if(arrayObj[i] == 0x02) //Operation Code
+            {
+                faclityOperationCodeTagHandle(arrayObj[i]);
+                i++;
+                faclityOperationCodeLenHandle(arrayObj[i]);
+                i++;
+                faclityOperationCodeHandle(arrayObj[i]);
+                i++;
+            }
+        }
+        else if(ComponentType == 0xA2) //Return Result
+        {
+            if(data == 0x30) //sequence tag
+            {
+            	faclitySequenceTagHandle(arrayObj[i]);
+            	i++;
+            	faclitySequenceLenHandle(arrayObj[i]);
+            	i++;            	
+            }
+            if(data == 0x02) //Operation Code
+            {
+                faclityOperationCodeTagHandle(arrayObj[i]);
+                i++;
+                faclityOperationCodeLenHandle(arrayObj[i]);
+                i++;
+                faclityOperationCodeHandle(arrayObj[i]);
+                i++;
+            }
+        }
+        else if(ComponentType == 0xA3) //Return Error
+        {
+            if(data == 0x02) //Error Code tag
+            {
+                faclityErrorCodeTagHandle(arrayObj[i]);
+                i++;
+                faclityErrorCodeLenHandle(arrayObj[i]);
+                i++;
+                faclityErrorCodeLenHandle(arrayObj[i]);
+                i++;
+            }
+            else
+            {
+                alert("SS message Return Error component error!");  
+            }
+        }
+        else if(ComponentType == 0xA4) //Reject
+        {
+        	faclityProblemCodeTagHandle(arrayObj[i]);
+        	i++;
+        	faclityProblemCodeLenHandle(arrayObj[i]);
+        	i++;
+        	faclityProblemCodeHandle(arrayObj[i]);
+            i++;
+        }
+    }
+    if(arrayObj[i] == 0x7F) //SS version
+    {
+    	ssVersionIndIEIHandle(arrayObj[i]);
+    	i++;
+    	ssVersionIndLenHandle(arrayObj[i]);
+    	i++;
+    	ssVersionIndHandle(arrayObj[i]);
+    	i++;
+    	}
 
     setResult(dstStr);  
 }  
+
 </script>  
 
 </html>  
